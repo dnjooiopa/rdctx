@@ -79,11 +79,10 @@ func SetEx(ctx context.Context, key string, value interface{}, exp time.Duration
 }
 
 func Set(ctx context.Context, key string, value interface{}) (string, error) {
-	return SetEx(ctx, k(key), value, 0)
+	return SetEx(ctx, key, value, 0)
 }
 
 func Del(ctx context.Context, keys ...string) (int64, error) {
-
 	return c(ctx).Del(ctx, ks(keys...)...).Result()
 }
 
