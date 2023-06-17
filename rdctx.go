@@ -73,7 +73,7 @@ func replacePrefix(keys ...string) []string {
 		return keys
 	}
 	for i, v := range keys {
-		if strings.HasPrefix(keyPrefix+":", v) {
+		if strings.HasPrefix(v, keyPrefix+":") {
 			keys[i] = strings.TrimPrefix(v, keyPrefix+":")
 		}
 	}
