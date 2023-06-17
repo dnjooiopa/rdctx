@@ -52,34 +52,6 @@ func c(ctx context.Context) *Client {
 	return ctx.Value(ctxKeyClient{}).(*Client)
 }
 
-var keyPrefix string
-
-func SetKeyPrefix(prefix string) {
-	keyPrefix = prefix
-}
-
-func addPrefix(keys ...string) []string {
-	if keyPrefix == "" {
-		return keys
-	}
-	for i, v := range keys {
-		keys[i] = keyPrefix + ":" + v
-	}
-	return keys
-}
-
-func replacePrefix(keys ...string) []string {
-	if keyPrefix == "" {
-		return keys
-	}
-	for i, v := range keys {
-		if strings.HasPrefix(v, keyPrefix+":") {
-			keys[i] = strings.TrimPrefix(v, keyPrefix+":")
-		}
-	}
-	return keys
-}
-
 func SetEx(ctx context.Context, key string, value interface{}, exp time.Duration) (string, error) {
 	return c(ctx).Set(ctx, addPrefix(key)[0], value, exp).Result()
 }
@@ -117,7 +89,11 @@ func MGet(ctx context.Context, keys ...string) ([]interface{}, error) {
 }
 
 func Scan(ctx context.Context, cursor uint64, match string, count int64) ([]string, uint64, error) {
-	return c(ctx).Scan(ctx, cursor, addPrefix(match)[0], count).Result()
+	keys, cursor, err := c(ctx).Scan(ctx, cursor, addPrefix(match)[0], count).Result()
+	if err != nil {
+		return nil, 0, err
+	}
+	return removeDuplicateKeys(replacePrefix(keys...)...), cursor, nil
 }
 
 type KeyValue struct {
@@ -136,4 +112,45 @@ func MSetEx(ctx context.Context, keyValues []KeyValue, exp time.Duration) error 
 	}
 	_, err := pipeline.Exec(ctx)
 	return err
+}
+
+var keyPrefix string
+
+func SetKeyPrefix(prefix string) {
+	keyPrefix = prefix
+}
+
+func addPrefix(keys ...string) []string {
+	if keyPrefix == "" {
+		return keys
+	}
+	for i, v := range keys {
+		keys[i] = keyPrefix + ":" + v
+	}
+	return keys
+}
+
+func replacePrefix(keys ...string) []string {
+	if keyPrefix == "" {
+		return keys
+	}
+	for i, v := range keys {
+		if strings.HasPrefix(v, keyPrefix+":") {
+			keys[i] = strings.TrimPrefix(v, keyPrefix+":")
+		}
+	}
+	return keys
+}
+
+func removeDuplicateKeys(keys ...string) []string {
+	m := map[string]bool{}
+	filtered := []string{}
+	for _, v := range keys {
+		if m[v] {
+			continue
+		}
+		filtered = append(filtered, v)
+		m[v] = true
+	}
+	return filtered
 }
