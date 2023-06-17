@@ -3,6 +3,7 @@ package rdctx
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -57,25 +58,30 @@ func SetKeyPrefix(prefix string) {
 	keyPrefix = prefix
 }
 
-func k(key string) string {
-	if keyPrefix == "" {
-		return key
-	}
-	return keyPrefix + ":" + key
-}
-
-func ks(keys ...string) []string {
+func addPrefix(keys ...string) []string {
 	if keyPrefix == "" {
 		return keys
 	}
 	for i, v := range keys {
-		keys[i] = k(v)
+		keys[i] = keyPrefix + ":" + v
+	}
+	return keys
+}
+
+func replacePrefix(keys ...string) []string {
+	if keyPrefix == "" {
+		return keys
+	}
+	for i, v := range keys {
+		if strings.HasPrefix(keyPrefix, v) {
+			keys[i] = strings.TrimPrefix(v, keyPrefix+":")
+		}
 	}
 	return keys
 }
 
 func SetEx(ctx context.Context, key string, value interface{}, exp time.Duration) (string, error) {
-	return c(ctx).Set(ctx, k(key), value, exp).Result()
+	return c(ctx).Set(ctx, addPrefix(key)[0], value, exp).Result()
 }
 
 func Set(ctx context.Context, key string, value interface{}) (string, error) {
@@ -83,31 +89,35 @@ func Set(ctx context.Context, key string, value interface{}) (string, error) {
 }
 
 func Del(ctx context.Context, keys ...string) (int64, error) {
-	return c(ctx).Del(ctx, ks(keys...)...).Result()
+	return c(ctx).Del(ctx, addPrefix(keys...)...).Result()
 }
 
 func Incr(ctx context.Context, key string) (int64, error) {
-	return c(ctx).Incr(ctx, k(key)).Result()
+	return c(ctx).Incr(ctx, addPrefix(key)[0]).Result()
 }
 
 func Get(ctx context.Context, key string) (string, error) {
-	return c(ctx).Get(ctx, k(key)).Result()
+	return c(ctx).Get(ctx, addPrefix(key)[0]).Result()
 }
 
 func Expire(ctx context.Context, key string, exp time.Duration) (bool, error) {
-	return c(ctx).Expire(ctx, k(key), exp).Result()
+	return c(ctx).Expire(ctx, addPrefix(key)[0], exp).Result()
 }
 
 func Keys(ctx context.Context, pattern string) ([]string, error) {
-	return c(ctx).Keys(ctx, k(pattern)).Result()
+	keys, err := c(ctx).Keys(ctx, addPrefix(pattern)[0]).Result()
+	if err != nil {
+		return nil, err
+	}
+	return replacePrefix(keys...), nil
 }
 
 func MGet(ctx context.Context, keys ...string) ([]interface{}, error) {
-	return c(ctx).MGet(ctx, ks(keys...)...).Result()
+	return c(ctx).MGet(ctx, addPrefix(keys...)...).Result()
 }
 
 func Scan(ctx context.Context, cursor uint64, match string, count int64) ([]string, uint64, error) {
-	return c(ctx).Scan(ctx, cursor, k(match), count).Result()
+	return c(ctx).Scan(ctx, cursor, addPrefix(match)[0], count).Result()
 }
 
 type KeyValue struct {
@@ -122,7 +132,7 @@ func MSetEx(ctx context.Context, keyValues []KeyValue, exp time.Duration) error 
 
 	pipeline := c(ctx).Pipeline()
 	for _, v := range keyValues {
-		pipeline.Set(ctx, k(v.Key), v.Value, exp)
+		pipeline.Set(ctx, addPrefix(v.Key)[0], v.Value, exp)
 	}
 	_, err := pipeline.Exec(ctx)
 	return err
