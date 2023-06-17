@@ -8,10 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Client struct {
-	*redis.Client
-}
-
 func New(addr string, password string, db int) *Client {
 	c := redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -19,6 +15,10 @@ func New(addr string, password string, db int) *Client {
 		DB:       db,
 	})
 	return &Client{c}
+}
+
+type Client struct {
+	*redis.Client
 }
 
 // connection ok if no error
@@ -51,40 +51,64 @@ func c(ctx context.Context) *Client {
 	return ctx.Value(ctxKeyClient{}).(*Client)
 }
 
+var keyPrefix string
+
+func SetKeyPrefix(prefix string) {
+	keyPrefix = prefix
+}
+
+func k(key string) string {
+	if keyPrefix == "" {
+		return key
+	}
+	return keyPrefix + ":" + key
+}
+
+func ks(keys ...string) []string {
+	if keyPrefix == "" {
+		return keys
+	}
+	for i, v := range keys {
+		keys[i] = k(v)
+	}
+	return keys
+}
+
 func SetEx(ctx context.Context, key string, value interface{}, exp time.Duration) (string, error) {
-	return c(ctx).Set(ctx, key, value, exp).Result()
+	return c(ctx).Set(ctx, k(key), value, exp).Result()
 }
 
 func Set(ctx context.Context, key string, value interface{}) (string, error) {
-	return SetEx(ctx, key, value, 0)
+	return SetEx(ctx, k(key), value, 0)
 }
 
 func Del(ctx context.Context, keys ...string) (int64, error) {
-	return c(ctx).Del(ctx, keys...).Result()
+
+	return c(ctx).Del(ctx, ks(keys...)...).Result()
 }
 
 func Incr(ctx context.Context, key string) (int64, error) {
-	return c(ctx).Incr(ctx, key).Result()
+	return c(ctx).Incr(ctx, k(key)).Result()
 }
 
 func Get(ctx context.Context, key string) (string, error) {
-	return c(ctx).Get(ctx, key).Result()
+	return c(ctx).Get(ctx, k(key)).Result()
 }
 
 func Expire(ctx context.Context, key string, exp time.Duration) (bool, error) {
-	return c(ctx).Expire(ctx, key, exp).Result()
+	return c(ctx).Expire(ctx, k(key), exp).Result()
 }
 
 func Keys(ctx context.Context, pattern string) ([]string, error) {
-	return c(ctx).Keys(ctx, pattern).Result()
+	return c(ctx).Keys(ctx, k(pattern)).Result()
 }
 
 func MGet(ctx context.Context, keys ...string) ([]interface{}, error) {
-	return c(ctx).MGet(ctx, keys...).Result()
+	return c(ctx).MGet(ctx, ks(keys...)...).Result()
 }
 
 func Scan(ctx context.Context, cursor uint64, match string, count int64) ([]string, uint64, error) {
-	return c(ctx).Scan(ctx, cursor, match, count).Result()
+	return c(ctx).Scan(ctx, cursor, k(match), count).Result()
 }
 
 type KeyValue struct {
@@ -99,7 +123,7 @@ func MSetEx(ctx context.Context, keyValues []KeyValue, exp time.Duration) error 
 
 	pipeline := c(ctx).Pipeline()
 	for _, v := range keyValues {
-		pipeline.Set(ctx, v.Key, v.Value, exp)
+		pipeline.Set(ctx, k(v.Key), v.Value, exp)
 	}
 	_, err := pipeline.Exec(ctx)
 	return err
