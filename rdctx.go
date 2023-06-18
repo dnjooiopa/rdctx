@@ -93,7 +93,7 @@ func Scan(ctx context.Context, cursor uint64, match string, count int64) ([]stri
 	if err != nil {
 		return nil, 0, err
 	}
-	return removeDuplicateKeys(replacePrefix(keys...)...), cursor, nil
+	return replacePrefix(keys...), cursor, nil
 }
 
 type KeyValue struct {
@@ -140,17 +140,4 @@ func replacePrefix(keys ...string) []string {
 		}
 	}
 	return keys
-}
-
-func removeDuplicateKeys(keys ...string) []string {
-	m := map[string]bool{}
-	filtered := []string{}
-	for _, v := range keys {
-		if m[v] {
-			continue
-		}
-		filtered = append(filtered, v)
-		m[v] = true
-	}
-	return filtered
 }
