@@ -4,6 +4,8 @@ rdctx is a go-redis client wrapper with more features
 
 ### Example
 
+#### Simple usage
+
 ```go
 package main
 
@@ -37,4 +39,10 @@ func performTask(ctx context.Context) {
 	}
 	log.Println("result is", v)
 }
+```
+
+#### Inject to echo middleware
+
+```go
+e.Use(echo.WrapMiddleware(rdctx.Middleware(rc)))
 ```
