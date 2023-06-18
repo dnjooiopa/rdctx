@@ -46,3 +46,13 @@ func performTask(ctx context.Context) {
 ```go
 e.Use(echo.WrapMiddleware(rdctx.Middleware(rc))) // rc is *rdctx.Client
 ```
+
+#### Set multiple key-value pairs with a single command
+
+```go
+pairs := []rdctx.KeyValue{
+	{"foo1", "bar1"},
+	{"foo2", "bar2"},
+}
+err := rdctx.MSetEx(ctx, pairs, 24*time.Hour)
+```
