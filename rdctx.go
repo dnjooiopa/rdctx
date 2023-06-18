@@ -18,6 +18,10 @@ func New(addr string, password string, db int) *Client {
 	return &Client{c}
 }
 
+func NewWithOptions(opt *redis.Options) *Client {
+	return &Client{redis.NewClient(opt)}
+}
+
 type Client struct {
 	*redis.Client
 }
