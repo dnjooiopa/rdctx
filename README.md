@@ -2,7 +2,7 @@
 
 rdctx is a go-redis client wrapper with more features
 
-### Example
+### Examples
 
 #### Simple usage
 
