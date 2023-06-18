@@ -44,5 +44,5 @@ func performTask(ctx context.Context) {
 #### Inject to echo middleware
 
 ```go
-e.Use(echo.WrapMiddleware(rdctx.Middleware(rc)))
+e.Use(echo.WrapMiddleware(rdctx.Middleware(rc))) // rc is *rdctx.Client
 ```
