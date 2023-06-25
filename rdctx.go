@@ -9,21 +9,33 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+type Client struct {
+	*redis.Client
+}
+
+type Option func(*Client)
+
 func New(addr string, password string, db int) *Client {
-	c := redis.NewClient(&redis.Options{
+	opt := redis.Options{
 		Addr:     addr,
 		Password: password,
 		DB:       db,
-	})
-	return &Client{c}
+	}
+	return NewWithOption(WithOption(&opt))
 }
 
-func NewWithOptions(opt *redis.Options) *Client {
-	return &Client{redis.NewClient(opt)}
+func NewWithOption(opts ...Option) *Client {
+	c := &Client{}
+	for _, opt := range opts {
+		opt(c)
+	}
+	return c
 }
 
-type Client struct {
-	*redis.Client
+func WithOption(opt *redis.Options) Option {
+	return func(c *Client) {
+		c.Client = redis.NewClient(opt)
+	}
 }
 
 // connection ok if no error
