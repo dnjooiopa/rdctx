@@ -56,3 +56,7 @@ pairs := []rdctx.KeyValue{
 }
 err := rdctx.MSetEx(ctx, pairs, 24*time.Hour)
 ```
+
+## License
+
+MIT
