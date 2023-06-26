@@ -2,7 +2,7 @@
 
 rdctx is a go-redis client wrapper with more features
 
-### Examples
+## Examples
 
 #### Simple usage
 
@@ -10,49 +10,52 @@ rdctx is a go-redis client wrapper with more features
 package main
 
 import (
-	"context"
-	"log"
+ "context"
+ "log"
 
-	"github.com/dnjooiopa/rdctx"
+ "github.com/dnjooiopa/rdctx"
 )
 
 func main() {
-	rc, ctx := rdctx.NewWithContext(context.Background(), "localhost:6379", "", 3)
-	defer rc.Close()
+  host := "localhost:6379"
+  pwd := ""
+  db := 3
+  rc, ctx := rdctx.NewWithContext(context.Background(), host, pwd, db)
+  defer rc.Close()
 
-	if err := rc.ConnectionOK(); err != nil {
-		log.Println("cannot connect to redis:", err)
-	}
-	log.Println("redis connected")
+  if err := rc.ConnectionOK(); err != nil {
+    log.Println("cannot connect to redis:", err)
+  }
+  log.Println("redis connected")
 
-	performTask(ctx)
+  performTask(ctx)
 }
 
 func performTask(ctx context.Context) {
-	if _, err := rdctx.Set(ctx, "foo", "bar"); err != nil {
-		log.Println("cannot set key to redis:", err)
-	}
+  if _, err := rdctx.Set(ctx, "foo", "bar"); err != nil {
+    log.Println("cannot set key to redis:", err)
+  }
 
-	v, err := rdctx.Get(ctx, "foo")
-	if err != nil {
-		log.Println("cannot get key from redis:", err)
-	}
-	log.Println("result is", v)
+  v, err := rdctx.Get(ctx, "foo")
+  if err != nil {
+    log.Println("cannot get key from redis:", err)
+  }
+  log.Println("result is", v)
 }
 ```
 
 #### Inject to echo middleware
 
 ```go
-e.Use(echo.WrapMiddleware(rdctx.Middleware(rc))) // rc is *rdctx.Client
+e.Use(echo.WrapMiddleware(rdctx.Middleware(rc))) // rc is a *rdctx.Client
 ```
 
 #### Set multiple key-value pairs with a single command
 
 ```go
 pairs := []rdctx.KeyValue{
-	{"foo1", "bar1"},
-	{"foo2", "bar2"},
+  {"foo1", "bar1"},
+  {"foo2", "bar2"},
 }
 err := rdctx.MSetEx(ctx, pairs, 24*time.Hour)
 ```
