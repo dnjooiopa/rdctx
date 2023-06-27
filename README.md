@@ -21,10 +21,12 @@ func main() {
   pwd := ""
   db := 3
 
-  rc, ctx := rdctx.NewWithContext(context.Background(), host, pwd, db)
-  defer rc.Close()
+  // init
+  client, ctx := rdctx.NewWithContext(context.Background(), host, pwd, db)
+  defer client.Close()
 
-  if err := rc.ConnOK(); err != nil {
+  // Check if connection is ok
+  if err := client.ConnOK(); err != nil {
     log.Println("cannot connect to redis:", err)
   }
   log.Println("redis connected")
@@ -33,10 +35,13 @@ func main() {
 }
 
 func performTask(ctx context.Context) {
-  if _, err := rdctx.Set(ctx, "foo", "bar"); err != nil {
+  // Set key-value
+  _, err := rdctx.Set(ctx, "foo", "bar")
+  if err != nil {
     log.Println("cannot set key to redis:", err)
   }
 
+  // Get value from key
   v, err := rdctx.Get(ctx, "foo")
   if err != nil {
     log.Println("cannot get key from redis:", err)
@@ -48,7 +53,7 @@ func performTask(ctx context.Context) {
 #### Inject to echo middleware
 
 ```go
-e.Use(echo.WrapMiddleware(rdctx.Middleware(rc))) // rc is a *rdctx.Client
+e.Use(echo.WrapMiddleware(rdctx.Middleware(client)))
 ```
 
 #### Set multiple key-value pairs with a single command
