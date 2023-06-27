@@ -20,10 +20,11 @@ func main() {
   host := "localhost:6379"
   pwd := ""
   db := 3
+
   rc, ctx := rdctx.NewWithContext(context.Background(), host, pwd, db)
   defer rc.Close()
 
-  if err := rc.ConnectionOK(); err != nil {
+  if err := rc.ConnOK(); err != nil {
     log.Println("cannot connect to redis:", err)
   }
   log.Println("redis connected")

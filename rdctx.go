@@ -39,7 +39,7 @@ func WithOption(opt *redis.Options) Option {
 }
 
 // connection ok if no error
-func (c *Client) ConnectionOK() error {
+func (c *Client) ConnOK() error {
 	_, err := c.Ping(context.Background()).Result()
 	return err
 }
