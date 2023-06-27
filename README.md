@@ -1,5 +1,7 @@
 # rdctx
 
+[![GoDoc](https://pkg.go.dev/badge/github.com/dnjooiopa/rdctx)](https://pkg.go.dev/github.com/dnjooiopa/rdctx)
+
 rdctx is a go-redis client wrapper with more features
 
 ## Examples
