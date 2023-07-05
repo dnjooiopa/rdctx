@@ -68,6 +68,23 @@ pairs := []rdctx.KeyValue{
 err := rdctx.MSetEx(ctx, pairs, 24*time.Hour)
 ```
 
+#### Pub/Sub
+
+```go
+// subscribe
+sub := rdctx.NewSubscriber(ctx, "channel1")
+sub.OnMessage(ctx, func(msg string, err error) {
+  if err != nil {
+    // ...
+    return
+  }
+  log.Println("Message received:", msg)
+})
+
+// publish
+rdctx.Publish(ctx, "channel1", "hello from publisher")
+```
+
 ## License
 
 MIT
