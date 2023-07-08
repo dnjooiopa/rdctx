@@ -73,11 +73,8 @@ err := rdctx.MSetEx(ctx, pairs, 24*time.Hour)
 ```go
 // subscribe
 sub := rdctx.NewSubscriber(ctx, "channel1")
-sub.OnMessage(ctx, func(msg string, err error) {
-  if err != nil {
-    // ...
-    return
-  }
+defer sub.Close()
+sub.OnMessage(ctx, func(msg string) {
   log.Println("Message received:", msg)
 })
 
