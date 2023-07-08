@@ -6,19 +6,17 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type subscriber struct {
+type Subscriber struct {
 	*redis.PubSub
 }
 
-func (c *subscriber) OnMessage(ctx context.Context, f func(message string, err error)) {
+func (c *Subscriber) OnMessage(ctx context.Context, f func(message string)) {
 	go func() {
-		for {
-			msg, err := c.ReceiveMessage(ctx)
-			if err != nil {
-				f("", err)
-				continue
-			}
-			f(msg.Payload, nil)
+		if _, err := c.ReceiveTimeout(ctx, -1); err != nil {
+			return
+		}
+		for msg := range c.Channel() {
+			f(msg.Payload)
 		}
 	}()
 }

@@ -130,9 +130,9 @@ func MSetEx(ctx context.Context, keyValues []KeyValue, exp time.Duration) error 
 	return err
 }
 
-func NewSubscriber(ctx context.Context, channels ...string) *subscriber {
+func NewSubscriber(ctx context.Context, channels ...string) *Subscriber {
 	sub := c(ctx).Subscribe(ctx, channels...)
-	return &subscriber{sub}
+	return &Subscriber{sub}
 }
 
 func Publish(ctx context.Context, channel string, message interface{}) error {
